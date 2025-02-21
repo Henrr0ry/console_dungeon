@@ -1,0 +1,7 @@
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\bin\Debug\console_dungeon.exe.config
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\bin\Debug\console_dungeon.exe
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\bin\Debug\console_dungeon.pdb
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\obj\Debug\console_dungeon.csproj.AssemblyReference.cache
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\obj\Debug\console_dungeon.csproj.CoreCompileInputs.cache
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\obj\Debug\console_dungeon.exe
+C:\Users\Henrr0ry\source\repos\console_dungeon\console_dungeon\obj\Debug\console_dungeon.pdb
