@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -49,6 +50,8 @@ namespace console_dungeon
                 if (armor > 0)
                 {
                     armor -= damage / 2;
+                    if (armor <= 0)
+                        armor = 0;
                 }
                 else
                 {
@@ -232,11 +235,11 @@ namespace console_dungeon
             }
             public override void attack(enemy e)
             {
-                if (stamina >= 7)
+                if (stamina >= 5)
                 {
                     if (position + 1 == e.position)
                     {
-                        stamina -= 7;
+                        stamina -= 5;
                         e.TakeDamage(damage);
                         LogEvent(name + " zaútočil na " + e.name);
                     }
@@ -249,16 +252,11 @@ namespace console_dungeon
 
             public override void defend(enemy e)
             {
-                if (stamina >= 12)
+                if (stamina >= 10)
                 {
-                    if (position + 1 == e.position)
-                    {
-                        stamina -= 12;
-                        using_shield = true;
-                        LogEvent(name + " používá štít");
-                    }
-                    else
-                        BadActionMessage = true;
+                    stamina -= 10;
+                    using_shield = true;
+                    LogEvent(name + " používá štít");
                 }
                 else
                     NotEnoughStaminaMessage = true;
@@ -300,12 +298,66 @@ namespace console_dungeon
         {
             public wizard(string name, string[] texture, int health, int armor, int damage, string[] description, string weapon) : base(name, texture, health, armor, damage, description, weapon)
             {
-                slots = new string[] { "left", "right", "fireball", "curse", "heal_take" };
+                slots = new string[] { "left", "right", "stick", "fireball", "curse" };
             }
 
             public wizard(wizard w) : base(w)
             {
-                slots = new string[] { "left", "right", "fireball", "curse", "heal_take" };
+                slots = new string[] { "left", "right", "stick", "fireball", "curse" };
+            }
+
+            public override void attack(enemy e)
+            {
+                if (stamina >= 5)
+                {
+                    if (position + 1 == e.position)
+                    {
+                        stamina -= 5;
+                        e.TakeDamage(damage / 2);
+                        LogEvent(name + " zaútočil na " + e.name);
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
+
+            public override void defend(enemy e)
+            {
+                if (stamina >= 10)
+                {
+                    if (position + 3 >= e.position && position + 1 != e.position)
+                    {
+                        stamina -= 10;
+                        e.TakeDamage(damage);
+                        LogEvent(name + " vyvolal ohnivou kouli");
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
+
+            public override void special(enemy e)
+            {
+                if (stamina >= 15)
+                {
+                    if (health < max_health)
+                    {
+                        stamina -= 15;
+                        health += 5;
+                        if (health >= max_health)
+                            health = max_health;
+                        e.health -= 5;
+                        LogEvent(name + " použil prokletí");
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
             }
         }
 
@@ -320,18 +372,126 @@ namespace console_dungeon
             {
                 slots = new string[] { "left", "right", "bow", "strong_bow", "stunning_knife" };
             }
+
+            public override void attack(enemy e)
+            {
+                if (stamina >= 5)
+                {
+                    if (position + 3 >= e.position && position + 1 != e.position)
+                    {
+                        stamina -= 5;
+                        e.TakeDamage(damage);
+                        LogEvent(name + " zaútočil na " + e.name);
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
+
+            public override void defend(enemy e)
+            {
+                if (stamina >= 10)
+                {
+                    if (position + 3 <= e.position)
+                    {
+                        stamina -= 10;
+                        e.TakeDamage(damage + (damage /2));
+                        LogEvent(name + " zaútočil na " + e.name);
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
+
+            public override void special(enemy e)
+            {
+                if (stamina >= 15)
+                {
+                    if (position + 1 == e.position)
+                    {
+                        stamina -= 15;
+                        e.TakeDamage(damage / 2);
+                        if (e.damage > 2)
+                            e.damage -= 1;
+                        LogEvent(name + " použil jedovatou dýku");
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
         }
 
         public class berserk : hero
         {
+            private int wait_until_regen = 0;
             public berserk(string name, string[] texture, int health, int armor, int damage, string[] description, string weapon) : base(name, texture, health, armor, damage, description, weapon)
             {
-                slots = new string[] { "left", "right", "axe", "stunning_axe", "rage" };
+                slots = new string[] { "left", "right", "axe", "brutal_axe", "potion" };
             }
 
             public berserk(berserk b) : base(b)
             {
-                slots = new string[] { "left", "right", "axe", "stunning_axe", "rage" };
+                slots = new string[] { "left", "right", "axe", "brutal_axe", "potion" };
+            }
+
+            public override void attack(enemy e)
+            {
+                if (stamina >= 5)
+                {
+                    if (position + 1 == e.position)
+                    {
+                        stamina -= 5;
+                        e.TakeDamage(damage);
+                        LogEvent(name + " zaútočil na " + e.name);
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
+
+            public override void defend(enemy e)
+            {
+                if (stamina >= 10)
+                {
+                    if (position + 1 == e.position && health > 2)
+                    {
+                        stamina -= 10;
+                        e.TakeDamage(damage * 3);
+                        health -= 2;
+                        LogEvent(name + " zaútočil na " + e.name);
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
+            }
+
+            public override void special(enemy e)
+            {
+                if (stamina >= 15)
+                {
+                    if (health < max_health)
+                    {
+                        stamina -= 15;
+                        health += 5;
+                        if (health >= max_health)
+                            health = max_health;
+                        LogEvent(name + " použil lektvar");
+                    }
+                    else
+                        BadActionMessage = true;
+                }
+                else
+                    NotEnoughStaminaMessage = true;
             }
         }
 
@@ -357,42 +517,51 @@ namespace console_dungeon
             }
             protected void moveLeft(hero player)
             {
-                if (position != player.position + 1)
+                if (position != player.position + 1 && stamina >= 10)
                 {
                     position -= 1;
                     stamina -= 10;
                     LogEvent(name + " se posunul doleva");
                 }
+                else
+                    stamina -= 2;
             }
             protected void moveRight(hero player)
             {
-                if (position < 6)
+                if (position < 6 && stamina >= 10)
                 {
                     position += 1;
                     stamina -= 10;
                     LogEvent(name + " se posunul doprava");
                 }
+                else
+                    stamina -= 2;
             }
-            protected void nearAttack(hero player)
+            protected void nearAttack(hero player, int multiply = 1)
             {
-                if (player.position + 1 == position)
+                if (player.position + 1 == position && stamina >= 7)
                 {
-                    player.TakeDamage(damage);
+                    player.TakeDamage(damage * multiply);
                     stamina -= 7;
                     LogEvent(name + " zaútočil na " + player.name);
                 }
+                else
+                    stamina -= 2;
             }
-            protected void longAttack(hero player)
+            protected void longAttack(hero player, int multiply = 1)
             {
-                if (player.position >= position - 3)
+                if (player.position >= position - 3 && stamina >= 10)
                 {
-                    player.TakeDamage(damage);
+                    player.TakeDamage(damage * multiply);
                     stamina -= 10;
                     LogEvent(name + " zaútočil na " + player.name);
                 }
+                else
+                    stamina -= 2;
             }
             protected void heal()
             {
+                stamina -= 20;
                 health += 5;
                 if (health >= max_health)
                     health = max_health;
@@ -426,6 +595,38 @@ namespace console_dungeon
             }
         }
 
+        public class skeleton : enemy
+        {
+            public skeleton(string name, string[] texture, int health, int armor, int damage) : base(name, texture, health, armor, damage)
+            {
+                position = 6;
+            }
+            public skeleton(skeleton s) : base(s)
+            {
+                position = 6;
+            }
+
+            public override void Turn(hero player)
+            {
+                if (player.position < position - 2)
+                {
+                    moveLeft(player);
+                }
+                if (player.position == position - 2)
+                {
+                    longAttack(player, 2);
+                }
+                if (player.position == position - 1)
+                {
+                    if (rand.Next(0, 4) == 0)
+                        moveRight(player);
+                    else
+                        nearAttack(player);
+                }
+                base.Turn(player);
+            }
+        }
+
         // Main Game Variables
         static string playerName = "Hráč";
         static string option = "";
@@ -436,6 +637,9 @@ namespace console_dungeon
         static int mode = 0;
         static int level = 1;
         static int max_levels = 1;
+        static int difficulty = 1;
+        static int new_enemy = 0;
+        static int start_page = 0;
         static Random rand = new Random();
 
         static void Main(string[] args)
@@ -450,14 +654,16 @@ namespace console_dungeon
             warrior hero1 = new warrior("Gladiátor", new string[] { "     ___         ", "    |o o|        ", " # _|_-_|_       ", "### |   | \\      ", "'#'/|___|\\_|====>", "    |_|_|        " }, 30, 10, 5, new string[] { "Nebojácný bojovník, který útočí", "nablízko s mečem, brání se štítem", "a uzdravuje se lektvarem" }, "Meč  ");
             wizard hero2 = new wizard("Čaroděj", new string[] { "     ___         ", "    |o o|  @@    ", "   _|_-_|_ ||    ", "  / | @ | \\||    ", " /_/|___|\\_||    ", "    |_|_|  ||    " }, 20, 5, 6, new string[] { "Mocný čaroděj utočící nablízko", "holí, nadálku vyvolává ohnivou kouli", "a taky může proklít nepřítele" }, "Kouzelná hůl");
             archer hero3 = new archer("Lukostřelec", new string[] { "    \\\\\\\\         ", "    |o o|  |\\    ", "   _|_-_|__| \\   ", "  / | V |__| ||  ", " /_/|___|  | /   ", "    |_|_|  |/    " }, 20, 5, 3, new string[] { "Lukostřelec s přesnou muškou", "útočící na dálku", "sdf" }, "Luk a šípy");
-            berserk hero4 = new berserk("Bersekr", new string[] { "    .!!!.  ____  ", "    |o o| <__  \\ ", "   _|_-_|_ ||\\_| ", "  / |   | \\||    ", " /_/|___|\\_||    ", "    |_|_|  ||    " }, 15, 20, 7, new string[] { "Tvrdohlavý bojovník", "sdf", "vbdf" }, "Sekera");
+            berserk hero4 = new berserk("Bersekr", new string[] { "    .!!!.  ____  ", "    |o o| <__  \\ ", "   _|_-_|_ ||\\_| ", "  / |   | \\||    ", " /_/|___|\\_||    ", "    |_|_|  ||    " }, 15, 20, 5, new string[] { "Tvrdohlavý bojovník", "sdf", "vbdf" }, "Sekera");
 
-            //enemy skeleton = new enemy("Skeleton", new string[] {""})
+
             rat Rat = new rat("Krysa", new string[] { "                 ", "                 ", "  ()()________   ", " /oo \\        \\  ", " \\x    ___    /) ", "  /_/_/  /_/_/   " }, 10, 0, 2);
-            rat strongRat = new rat("Velka Krysa", new string[] { "                 ", "                 ", "  ()()________   ", " /oo \\        \\  ", " \\x    ___    /) ", "  /_/_/  /_/_/   " }, 15, 0, 4);
+            rat strongRat = new rat("Velka Krysa", new string[] { "                 ", "                 ", "  ()()________   ", " /oo \\        \\  ", " \\x   |___/   /) ", "  /_/_/  /_/_/   " }, 15, 0, 4);
+            skeleton Skeleton = new skeleton("Kostlivec", new string[] { "        ___      ", "       |x x|     ", "      _|_#_|_    ", "     / |_|_| \\   ", "<===|_/|#__|\\_\\  ", "       |_|_|     " }, 15, 5, 2);
 
             playedHero = new warrior(hero1);
             Enemy = new rat(Rat);
+
             // Main Game Loop
             while (true)
             {
@@ -472,22 +678,42 @@ namespace console_dungeon
                         case "p":
                             mode = 1;
                             break;
-                        case "k":
-                            break;
-                            break;
                         default:
                             HelpMessage = true;
                             break;
                     }
+                    if (option == "k")
+                        break;
                 }
 
                 if (mode == 1) // Help Menu
                 {
                     option = HelpMenu();
-                    if (option == "z")
-                        mode = 0;
-                    else
-                        HelpMessage = true;
+                    switch (option)
+                    {
+                        case "1":
+                            start_page = 0;
+                            break;
+                        case "2":
+                            start_page = 16;
+                            break;
+                        case "3":
+                            start_page = 16 * 2;
+                            break;
+                        case "4":
+                            start_page = 16 * 3;
+                            break;
+                        case "5":
+                            start_page = 16 * 4;
+                            break;
+                        case "z":
+                            mode = 0;
+                            break;
+
+                        default:
+                            HelpMessage = true;
+                            break;
+                    }
                 }
 
                 if (mode == 2) // Choose Hero
@@ -515,6 +741,9 @@ namespace console_dungeon
                             playerName = hero4.name;
                             mode = 3;
                             break;
+                        case "z":
+                            mode = 0;
+                            break;
                         default:
                             HelpMessage = true;
                             break;
@@ -528,16 +757,22 @@ namespace console_dungeon
                     switch (option)
                     {
                         case "1":
+                            difficulty = 1;
                             max_levels = 3;
                             mode = 4;
                             break;
                         case "2":
+                            difficulty = 2;
                             max_levels = 5;
                             mode = 4;
                             break;
                         case "3":
+                            difficulty = 3;
                             max_levels = 8;
                             mode = 4;
+                            break;
+                        case "z":
+                            mode = 0;
                             break;
                         default:
                             HelpMessage = true;
@@ -551,7 +786,24 @@ namespace console_dungeon
                     option = LevelMenu(playedHero);
                     if (level < max_levels)
                     {
-                        Enemy = new rat(Rat);
+                        if (difficulty == 1)
+                        {
+                            new_enemy = rand.Next(0, 2);
+                            if (new_enemy == 0)
+                                Enemy = new rat(Rat);
+                            if (new_enemy == 1)
+                                Enemy = new rat(strongRat);
+                        }
+                        if (difficulty == 2)
+                        {
+                            new_enemy = rand.Next(0, 4);
+                            if (new_enemy <= 1)
+                                Enemy = new skeleton(Skeleton);
+                            if (new_enemy == 2)
+                                Enemy = new rat(Rat);
+                            if (new_enemy == 3) 
+                                Enemy = new rat(strongRat);
+                        }
                         mode = 5;
                     }
                     if (level == max_levels)
@@ -603,6 +855,7 @@ namespace console_dungeon
                     {
                         playedHero.position = 0;
                         playedHero.regenerateStamina();
+                        ClearLogEvent();
                         level += 1;
                         mode = 4;
                     }
@@ -612,6 +865,8 @@ namespace console_dungeon
                 {
                     option = EndMenu(playedHero);
                     mode = 0;
+                    level = 1;
+                    playerName = "Hráč";
                 }
             }
         }
@@ -645,23 +900,85 @@ namespace console_dungeon
         static string[] helpText =
         {
             " Po zapnutí hry si hráč vybere jednoho z vybraných hrdinů, následně ",
-            " obtížnost.                                                         ",
+            " obtížnost. Cílem hry je porazit několik nepřátel, nacházejících se ",
+            " v jednotlivých místnostech.                                        ",
             "                                                                    ",
             " Souboje probíhají po tazích, v každém tahu může hráč zvolit jednu  ",
-            " z možností pro útok, obranu atd. podle toho kolik mu zbývá staminy ",
+            " z možností pro pohyb útok, obranu atd. podle toho kolik mu zbývá   ",
+            " staminy, každá akce požaduje různou staminu.                       ",
             "                                                                    ",
             " Ikonky:  <3   - Životy                                             ",
             "         --+   - Síla útoku                                         ",
             "         'H'   - Brnění                                             ",
-            "         \\/\\   - Stamina                                          ",
-            " dobre že? xd",
-            " dobre že? xd",
-            " dobre že? xd",
-            " dobre že? xd",
-            " dobre že? xd",
-            " dobre že? xd",
-            " dobre že? xd",
-            " dobr2 xd",
+            "         \\/\\   - Stamina                                            ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                        strana 1/5  ",
+            " Gladiátor                                                          ",
+            "                                                                    ",
+            " Útok mečem - je nutné aby se nepřítel nacházel o políčko vedle     ",
+            "                                                                    ",
+            " Štít - hráč po nasazení štítu se stává imunní vůči veškerému       ",
+            "        poškození do doby než nepřítel se na hráče pokusí zaútočit, ",
+            "        potom je štít zase neaktivní, hráč tudíž může dostat        ",
+            "        poškození                                                   ",
+            "                                                                    ",
+            " Uzdravující lektvar - uzdraví hráči 5 životů                       ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                        strana 2/5  ",
+            " Čaroděj                                                            ",
+            "                                                                    ",
+            " Útok holí - je nutné aby se nepřítel nacházel o políčko vedle,     ",
+            "             dává poloviční poškození                               ",
+            "                                                                    ",
+            " Ohnivá koule - nepřítel se nesmí nacházet o políčko vedle a        ",
+            "                maximálně o 3 políčka od hráče, dává celé poškození ",
+            "                                                                    ",
+            " Prokletí - hráč si vezme 5 životů od nepřítele (obnoví si 5 životů ",
+            "            nepříteli způsobí poškození 5 životů a to bez ohledu na ",
+            "            jeho brnění) na jakoukoliv vzdálenost                   ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                        strana 3/5  ",
+            " Lukostřelec                                                        ",
+            "                                                                    ",
+            " Výstřel z luku - nepřítel se nesmí nacházet o políčko vedle a      ",
+            "                  maximálně o 3 políčka od hráče, dává plné         ",
+            "                  poškození                                         ",
+            "                                                                    ",
+            " Silný výstřel z luku - nepřítel se nesmí nacházet o políčko vedle  ",
+            "                        a maximálně o 3 políčka od hráče,           ",
+            "                        dává 50% bonusového poškození               ",
+            "                                                                    ",
+            " Útok otrávenou dýkou - nepřítel se musí nacházet o políčko vedle,  ",
+            "                        jed nepřítele oslabí a to zmenšením jeho    ",
+            "                        poškozením (nejmenší poškození, které může  ",
+            "                        nepřítel mít je 2)                          ",
+            "                                                                    ",
+            "                                                        strana 4/5  ",
+            " Bersekr                                                            ",
+            "                                                                    ",
+            " Útok sekerou - je nutné aby se nepřítel nacházel o políčko vedle,  ",
+            "                dává plné poškození                                 ",
+            "                                                                    ",
+            " Naštvaný útok sekerou - je nutné aby se nepřítel nacházel o        ",
+            "                         políčko vedle, dává 3x poškození, ale hráč ",
+            "                         se zraní o 2 životy                        ",
+            "                                                                    ",
+            " Uzdravující lektvar - uzdraví hráči 5 životů                       ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                                    ",
+            "                                                        strana 5/5  ",
         };
 
         static string HelpMenu()
@@ -710,7 +1027,7 @@ namespace console_dungeon
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.Write("║");
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write(helpText[i - 3]);
+                    Console.Write(helpText[i - 3 + start_page]);
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.Write("║\n");
                 }
@@ -725,9 +1042,9 @@ namespace console_dungeon
                     Console.Write("╝\n");
                 }
             }
-
+            Console.Write("                                                                                     ");
+            GenerateUse("1 - 5", 0, true);
             GenerateButton("   Zpátky   ", "Z");
-            Console.Write("\n");
             return PlayerInput();
         }
 
@@ -758,7 +1075,8 @@ namespace console_dungeon
             GenerateUse("4", 20, true);
             Console.Write("\n");
 
-            GenerateUse("Vyber si postavu", 48, true, true);
+            GenerateUse("Z - zpátky", 5, false);
+            GenerateUse("Vyber si postavu", 26, true, true);
 
             return PlayerInput();
         }
@@ -774,7 +1092,8 @@ namespace console_dungeon
 
             GenerateUse("Vyber si obtížnost", 48, true, true);
 
-            Console.Write("\n\n\n\n\n\n");
+            Console.Write("\n\n\n\n\n");
+            GenerateUse("Z - zpátky", 5, true);
 
             return PlayerInput();
         }
@@ -1074,9 +1393,22 @@ namespace console_dungeon
             {
                 logText[i] = logText[i - 1];
             }
-            logText[0] = log;
+            if (log.Length <= 32)
+                logText[0] = log;
+            else 
+            {
+                logText[0] = "";
+                for (int j = 0; j < 32; j++)
+                    logText[0] += log[j];
+            }
         }
-
+        static void ClearLogEvent()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                logText[i] = "";
+            }
+        }
 
         static void PlayerInventory(hero player)
         {
@@ -1102,11 +1434,11 @@ namespace console_dungeon
             Console.Write(TextPad(logText[0], 32) + "║\n");
             Console.Write("╚════════════════════════════╩══════════╩══════════╩══════════╩══════════╩══════════╩════════════════════════════════╝\n");
             GenerateUse("K - konec tahu", 7, false);
-            GenerateUse("L", 4, false);
-            GenerateUse("R", 4, false);
-            GenerateUse("U", 4, false);
-            GenerateUse("O", 4, false);
-            GenerateUse("S", 4, true);
+            GenerateUse("L 10S", 2, false);
+            GenerateUse("R 10S", 2, false);
+            GenerateUse("U  5S", 2, false);
+            GenerateUse("O 10S", 2, false);
+            GenerateUse("S 15S", 2, true);
         }
 
         static void GenerateSlots(string[] args, int row, bool start_line = true)
@@ -1182,13 +1514,25 @@ namespace console_dungeon
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     if (row == 0)
-                        Console.Write("  /    #@ ");
+                        Console.Write(" '     #@ ");
                     if (row == 1)
-                        Console.Write(" \\ %  @@@#");
+                        Console.Write("  '  '@@@#");
                     if (row == 2)
-                        Console.Write("%   '  @@ ");
+                        Console.Write("'   '  @@ ");
                     if (row == 3)
-                        Console.Write("  ' %  /  ");
+                        Console.Write("  '       ");
+                }
+                if (i == "stick")
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    if (row == 0)
+                        Console.Write("    @@    ");
+                    if (row == 1)
+                        Console.Write("   //     ");
+                    if (row == 2)
+                        Console.Write("  //      ");
+                    if (row == 3)
+                        Console.Write(" //       ");
                 }
                 if (i == "curse")
                 {
@@ -1201,18 +1545,6 @@ namespace console_dungeon
                         Console.Write("   '||'   ");
                     if (row == 3)
                         Console.Write("    ||    ");
-                }
-                if (i == "heal_take")
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                    if (row == 0)
-                        Console.Write(" |''''''| ");
-                    if (row == 1)
-                        Console.Write(" |      | ");
-                    if (row == 2)
-                        Console.Write(" |Spells| ");
-                    if (row == 3)
-                        Console.Write(" |______| ");
                 }
                 if (i == "bow")
                 {
@@ -1252,39 +1584,27 @@ namespace console_dungeon
                 }
                 if (i == "axe")
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.ForegroundColor = ConsoleColor.Red;
                     if (row == 0)
-                        Console.Write("   _|''\\  ");
+                        Console.Write(" /'\\||/'\\ ");
                     if (row == 1)
-                        Console.Write("  | |   | ");
+                        Console.Write(" \\_/||\\_/ ");
                     if (row == 2)
-                        Console.Write("  | |\\_/  ");
+                        Console.Write("    ||    ");
                     if (row == 3)
-                        Console.Write("  |_|     ");
+                        Console.Write("    ||    ");
                 }
-                if (i == "stunning_axe")
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    if (row == 0)
-                        Console.Write("    ___?_ ");
-                    if (row == 1)
-                        Console.Write("?  / _   \\");
-                    if (row == 2)
-                        Console.Write("  / / \\? |");
-                    if (row == 3)
-                        Console.Write(" /_/ ? \\_|");
-                }
-                if (i == "rage")
+                if (i == "brutal_axe")
                 {
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                     if (row == 0)
-                        Console.Write("   _ _ _  ");
+                        Console.Write(" /'\\||/'\\ ");
                     if (row == 1)
-                        Console.Write("  | | | | ");
+                        Console.Write(" \\./||\\./ ");
                     if (row == 2)
-                        Console.Write("  \\     / ");
+                        Console.Write("  ' || '  ");
                     if (row == 3)
-                        Console.Write("   |   |  ");
+                        Console.Write("    ||    ");
                 }
 
 
