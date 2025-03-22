@@ -13,7 +13,7 @@ namespace console_dungeon
         public abstract class character
         {
             public string name;
-            public string[] texture; //17 x 6
+            public string[] texture; //17 height x 6 width [char]
             public int health;
             public int max_health;
             public int armor;
@@ -62,6 +62,8 @@ namespace console_dungeon
             }
 
         }
+
+
 
         public class hero : character
         {
@@ -617,13 +619,9 @@ namespace console_dungeon
 
             public override void Turn(hero player)
             {
-                if (player.position < position - 2)
+                if (player.position < position - 1)
                 {
                     moveLeft(player);
-                }
-                if (player.position == position - 2)
-                {
-                    longAttack(player, 2);
                 }
                 if (player.position == position - 1)
                 {
@@ -877,6 +875,7 @@ namespace console_dungeon
                     option = LevelMenu(playedHero);
                     if (level < max_levels)
                     {
+                        Enemy = new rat(Rat);
                         if (difficulty == 1)
                         {
                             new_enemy = rand.Next(0, 2);
@@ -970,6 +969,7 @@ namespace console_dungeon
                     option = EndMenu(playedHero);
                     mode = 0;
                     level = 1;
+                    playerTurn = true;
                     playerName = "Hráč";
                 }
             }
@@ -1642,9 +1642,9 @@ namespace console_dungeon
                 {
                     Console.ForegroundColor = ConsoleColor.Magenta;
                     if (row == 0)
-                        Console.Write("   .||.   ");
+                        Console.Write("    ||    ");
                     if (row == 1)
-                        Console.Write("  ======  ");
+                        Console.Write("  ==XX==  ");
                     if (row == 2)
                         Console.Write("   '||'   ");
                     if (row == 3)
@@ -1777,7 +1777,6 @@ namespace console_dungeon
             Console.ForegroundColor = ConsoleColor.White;
             return Console.ReadLine().ToString().ToLower();
         }
-
 
 
     }
